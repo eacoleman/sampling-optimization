@@ -1,8 +1,6 @@
 import import_ipynb
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from scipy.stats import gaussian_kde
 from sklearn.model_selection import train_test_split
 
 import torch
@@ -22,8 +20,8 @@ import pdb
 
     Description:
 
-        A network architecture for abundance-based inferences on 1D or 2D NMR
-        data.
+        A network architecture for change prediction on a 2D input/output space, over time.
+
 
 """
 class ChangePredictor(nn.Module):
@@ -32,6 +30,7 @@ class ChangePredictor(nn.Module):
 
         self.n_channels = n_channels
         self.plot_size = plot_size
+
 
     def forward(self, x):
         return 0

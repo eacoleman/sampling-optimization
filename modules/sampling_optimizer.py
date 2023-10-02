@@ -1,8 +1,6 @@
 import import_ipynb
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from scipy.stats import gaussian_kde
 from sklearn.model_selection import train_test_split
 
 import torch
@@ -22,8 +20,9 @@ import pdb
 
     Description:
 
-        A network architecture for abundance-based inferences on 1D or 2D NMR
-        data.
+        A network architecture for sampling optimization on a 2D input/output space, 
+        over one time step.
+
 
 """
 class SamplingOptimizer(nn.Module):
@@ -52,7 +51,7 @@ if __name__ == '__main__' :
     #output = model(input_data)
 
     # print model structure to tensorboard
-    writer = SummaryWriter('runs/ChangePredictor_test')
+    writer = SummaryWriter('runs/SamplingOptimizer_test')
     writer.add_graph(model, input_data)
     writer.close()
 

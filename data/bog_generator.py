@@ -28,7 +28,7 @@ class BogDataGenerator :
     #   bog data simulated using the options. The output should be a 3D array of
     #   size (number of time steps, plot size in pixels, plot size in pixels).
     def get_bog_data(self, opt_map):
-        
+
         # TODO: Fill in with sticky Markov model output here.
         return np.random.randn(100)
 
@@ -50,15 +50,14 @@ class BogDataGenerator :
             missing_keys = [key for key in required_keys if key not in opt_map]
             raise ValueError(f"Missing options in opt_map: {', '.join(missing_keys)}")
 
-        # Use default settings if NMR hardware options are not otherwise specified
+        # Use default settings if options are not otherwise specified
         example_unspecified_setting   = opt_map.get("example_unspecified_setting"  , 2e-5)
 
-        # Use opt_map to get the specified NMR sample data
+        # Use opt_map to get the specified sample data
         bog_data = self.get_bog_data(opt_map)
 
-        # Return the measured magnetization (for input), 
-        # the number of spins (for ground truth), and the 
-        # sim options
+        # Return the measured magnetization (for input)
+        # and the sim options
         return (bog_data, opt_map)
 
 

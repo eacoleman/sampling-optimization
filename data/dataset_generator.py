@@ -6,7 +6,7 @@ from optparse import OptionParser
 if __name__ == "__main__":
     data_generator = bg.BogDataGenerator()
 
-    # Specify the following options: filename. num_jobs, and the options for BlochSpinSimulator and NMRSimulator.
+    # Specify the following options: filename, num_jobs, and the options for the bog simulator.
     optparser = OptionParser()
 
     optparser.add_option("-f", "--filename", dest="filename", default="data", help="The filename to which the data will be saved.")

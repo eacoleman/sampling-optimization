@@ -1,8 +1,6 @@
 import import_ipynb
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from scipy.stats import gaussian_kde
 from sklearn.model_selection import train_test_split
 
 import torch
