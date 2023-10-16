@@ -45,11 +45,22 @@ def denoiseContours(contours):
     max_area_idx = np.argmax([cv2.contourArea(contour) for contour in contours])
     return contours[max_area_idx]
 
-def constructFarm(img_path, crop):
-    boundary = extractBoundary(img_path)
-    crop_boundary = extractBoundary(img_path)
-    crop_areas = {crop: crop_boundary}
-    return Farm(boundary, img_path, crop_areas)
+#crop type : [mean, var] (assuming pulling from normal dist completely identical land conditions)
+carbonDistributions = {"forest": [80, 10], "corn": [30, 10], None: [10, 10]}
+def predictCarbon(farm):
+    plots = farm.plots
+    for plot in plots.values():
+        crop = plot.crop
+        mu = carbonDistributions[crop][0]
+        sigma = np.sqrt(carbonDistributions[crop][1])
+        plt_carbon = np.random.normal(mu, sigma, 1)[0]
+        plot.carbon = plt_carbon
+
+def constructFarm(img_path = None, xdim = None, ydim = None):
+    if img_path:
+        boundary = extractBoundary(img_path)
+        return Farm(img_path = img_path, boundary = boundary)
+    return Farm(xdim = xdim, ydim = ydim)
 
 class Farm:
     """
@@ -61,8 +72,6 @@ class Farm:
     boundary = None
     bounding_box = None
     img_path = None
-    #dictionary of boundaries ie: {corn: [[[0, 0]], [[1, 1]]]}
-    crop_areas = None
     #create some overlying mesh for the elevation of the farm
     #ie: [[12, 12, 12], [13, 13, 13]] for 2x3 farm
     #each "coord" (index) corresponds to an elevation here
@@ -72,24 +81,35 @@ class Farm:
 
     #crop areas should be within boundary for when instantiating plots
     #only add for crop areas within farm boundary
-    def __init__(self, boundary, img_path = None, crop_areas = None):
+    def __init__(self, img_path = None, boundary = None, xdim = None, ydim = None):
         #right now boundary not translated to real world just random coordinates
         #TODO: translate to some long/lat scheme - add some sort of mapping
-        self.boundary = boundary
-        x, y, w, h = cv2.boundingRect(boundary)
-        self.bounding_box = [[x, y], [x, y + h], [x + w, y], [x + w, y + h]]
-        X = np.arange(x, x + w + 1, 1)
-        Y = np.arange(y, y + h + 1, 1)
-        self.X_mesh, self.Y_mesh = np.meshgrid(X, Y)
-        self.img_path = img_path
-        self.crop_areas = crop_areas
-        self.elevation_mesh = np.empty((w + 1, h + 1,))
-        self.elevation_mesh[:] = 0
-        self.coord_mask = np.empty((w + 1, h + 1,))
-        #used for visualization masking purposes only
-        #if point in farm then coord_mask set to 0
-        self.coord_mask[:] = np.nan
-        self.plots = self.define_points_in_farm()
+        if boundary is None: 
+            self.bounding_box = [[0, 0], [0, ydim], [xdim, 0], [xdim, ydim]]
+            X = np.arange(0, xdim, 1)
+            Y = np.arange(0, ydim, 1)
+            self.X_mesh, self.Y_mesh = np.meshgrid(X, Y)
+            self.elevation_mesh = np.empty((xdim, ydim))
+            self.elevation_mesh[:] = 0
+            #everything within bounding box valid coordinate
+            self.coord_mask = np.empty((xdim, ydim))
+            self.coord_mask[:] = 0
+            self.img_path = xdim,"x",ydim
+        else:
+            self.boundary = boundary
+            x, y, w, h = cv2.boundingRect(boundary)
+            self.bounding_box = [[x, y], [x, y + h], [x + w, y], [x + w, y + h]]
+            X = np.arange(x, x + w + 1, 1)
+            Y = np.arange(y, y + h + 1, 1)
+            self.X_mesh, self.Y_mesh = np.meshgrid(X, Y)
+            self.img_path = img_path
+            self.elevation_mesh = np.empty((w + 1, h + 1,))
+            self.elevation_mesh[:] = 0
+            self.coord_mask = np.empty((w + 1, h + 1,))
+            #used for visualization masking purposes only
+            #if point in farm then coord_mask set to 0
+            self.coord_mask[:] = np.nan
+            self.plots = self.define_points_in_farm()
 
     def __str__(self):
         return f"{self.boundary})"
@@ -102,28 +122,21 @@ class Farm:
             return False
         return True
 
-    def point_in_crop_area(self, point):
-        for area, boundary in self.crop_areas.items():
-            in_crop_area = cv2.pointPolygonTest(boundary, point, measureDist = False)
-            if in_crop_area == 1:
-                return area
-        return None
-
     def define_points_in_farm(self):
         plots = {}
         x, y, width, height = cv2.boundingRect(self.boundary)
         for ii in range(x, x + width + 1):
             for jj in range(y, y + height + 1):
                 if self.point_in_farm((ii, jj)):
-                    crop = self.point_in_crop_area((ii, jj))
-                    newPlot = Plot([[ii, jj]], crop)
+                    ##crop = self.point_in_crop_area((ii, jj))
+                    ##newPlot = Plot([[ii, jj]], crop)
                     #first set everything within farm to 0
                     #ii jj not 0 indexed need to "0 index" to translate into
                     #bounding box for np array
                     start_x = self.bounding_box[0][0]
                     start_y = self.bounding_box[0][1]
                     self.coord_mask[ii - start_x][jj - start_y] = 0
-                    plots[(ii, jj)] = newPlot
+                    ##plots[(ii, jj)] = newPlot
         return plots
 
     def visualize(self):
