@@ -182,7 +182,7 @@ class BogDataGenerator :
         plt.title('Initial guess')
 
 
-        # Source term
+        # Source term * replace with kappa 
         f = - 1000 * np.ones_like(grid_boundary)
 
         # Iterative solver (Gauss-Seidel) with Dirichlet boundary conditions
